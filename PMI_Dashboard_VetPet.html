@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetCare × VetWell — Post-Merger Integration Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #0097A7;
+  --teal-light: #4DD0E1;
+  --teal-dark: #006064;
+  --coral: #FF6B6B;
+  --gold: #FFB347;
+  --navy: #1A2332;
+  --bg: #0F1419;
+  --card: #1A2332;
+  --border: #2D3748;
+  --text: #E2E8F0;
+  --text-muted: #94A3B8;
+  --green: #4ADE80;
+  --red: #F87171;
+  --purple: #A78BFA;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ───────────────────────────────── */
+.header {
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, var(--card) 0%, var(--bg) 100%);
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: white; font-family: 'Outfit', sans-serif;
+}
+.header h1 { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.header .subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.header-right { font-size: 11px; color: var(--text-muted); text-align: right; line-height: 1.6; }
+
+/* ── NAV ──────────────────────────────────── */
+.nav {
+  display: flex; gap: 2px; padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  overflow-x: auto;
+}
+.nav-btn {
+  padding: 13px 22px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  border-bottom: 2.5px solid transparent;
+  font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; gap: 7px;
+  transition: all 0.2s; white-space: nowrap;
+}
+.nav-btn:hover { color: var(--teal); background: rgba(0,151,167,0.05); }
+.nav-btn.active { color: var(--teal); background: rgba(0,151,167,0.08); border-bottom-color: var(--teal); }
+.nav-icon { font-size: 15px; }
+
+/* ── CONTENT ──────────────────────────────── */
+.content { padding: 28px 32px; max-width: 1220px; margin: 0 auto; }
+.tab-panel { display: none; animation: fadeIn 0.35s ease; }
+.tab-panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── GRID ─────────────────────────────────── */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 28px; }
+@media (max-width: 900px) {
+  .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .content { padding: 16px; }
+  .nav { padding: 0 12px; }
+  .header { padding: 14px 16px; }
+}
+
+/* ── METRIC CARD ──────────────────────────── */
+.metric-card {
+  background: var(--card); border-radius: 12px; padding: 20px 24px;
+  border: 1px solid var(--border); position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.3s;
+}
+.metric-card:hover { transform: translateY(-3px); }
+.metric-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--accent, var(--teal));
+}
+.metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.metric-value { font-size: 28px; font-weight: 700; font-family: 'Outfit', sans-serif; color: var(--text); }
+.metric-sub { font-size: 12px; color: var(--accent, var(--teal)); margin-top: 5px; }
+
+/* ── CHART CARD ───────────────────────────── */
+.chart-card {
+  background: var(--card); border-radius: 12px; padding: 22px 24px;
+  border: 1px solid var(--border); margin-bottom: 28px;
+}
+.chart-card.span-2 { grid-column: span 2; }
+.chart-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 18px; }
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── SECTION TITLE ────────────────────────── */
+.section-title { margin-bottom: 22px; }
+.section-title h2 { font-size: 22px; font-weight: 700; font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+.section-title p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── INITIATIVE CARD ──────────────────────── */
+.init-card {
+  background: var(--card); border-radius: 12px; padding: 16px 20px;
+  border: 1px solid var(--border); display: flex; gap: 16px;
+  align-items: flex-start; margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.init-card:hover { border-color: var(--teal); }
+.init-num {
+  width: 38px; height: 38px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; font-family: 'Outfit', sans-serif;
+  flex-shrink: 0;
+}
+.init-body { flex: 1; }
+.init-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.init-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.55; }
+.init-tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.tag { font-size: 10px; padding: 3px 10px; border-radius: 99px; font-weight: 600; }
+
+/* ── INFO CARD ────────────────────────────── */
+.info-card {
+  background: var(--card); border-radius: 10px; padding: 16px 18px;
+  border: 1px solid var(--border);
+}
+.info-card.top-accent { border-top: 3px solid var(--accent, var(--teal)); }
+.info-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.info-card p, .info-card .info-text { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+/* ── SYNERGY ITEM ─────────────────────────── */
+.syn-item { margin-bottom: 12px; padding-left: 12px; }
+.syn-item h5 { font-size: 12px; font-weight: 600; color: var(--text); }
+.syn-item p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── TABLE ────────────────────────────────── */
+.pnl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pnl-table th, .pnl-table td { padding: 7px 14px; }
+.pnl-table th { color: var(--text-muted); font-weight: 600; }
+.pnl-table thead tr:first-child th { border-bottom: 2px solid var(--border); }
+.pnl-table .section-header td { padding-top: 12px; font-weight: 700; border-bottom: 1px solid var(--border); }
+.pnl-table .total-row td { font-weight: 700; border-top: 1px solid var(--border); }
+.pnl-table td.right { text-align: right; }
+.pnl-table .syn-col { color: var(--teal); }
+.pnl-table .muted-col { color: var(--text-muted); }
+
+/* ── ORG CHART ────────────────────────────── */
+.org-box {
+  padding: 9px 22px; border-radius: 8px; text-align: center;
+  font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+  display: inline-block;
+}
+.org-row { display: flex; justify-content: center; gap: 36px; margin-bottom: 20px; flex-wrap: wrap; }
+.org-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 400; text-align: center; }
+
+/* ── SCENARIO BTNS ────────────────────────── */
+.scenario-btns { display: flex; gap: 12px; margin-bottom: 24px; }
+.scenario-btn {
+  padding: 10px 26px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--text-muted);
+}
+.scenario-btn.active { border-color: var(--teal); background: rgba(0,151,167,0.12); color: var(--teal); }
+.scenario-btn:hover { border-color: var(--teal); }
+
+/* ── MATRIX ───────────────────────────────── */
+.matrix-box {
+  position: relative; height: 320px; background: rgba(15,20,25,0.6);
+  border-radius: 8px; overflow: hidden;
+}
+.matrix-line-v { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(45,55,72,0.5); }
+.matrix-line-h { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(45,55,72,0.5); }
+.matrix-label { position: absolute; font-size: 10px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+.matrix-circle {
+  position: absolute; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; font-family: 'Outfit', sans-serif;
+  transform: translate(-50%, -50%); transition: transform 0.3s;
+}
+.matrix-circle:hover { transform: translate(-50%, -50%) scale(1.15); }
+
+/* ── MISC ─────────────────────────────────── */
+.border-left-accent { border-left: 2px solid; padding-left: 12px; }
+.comm-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(45,55,72,0.3); font-size: 12px; }
+.comm-row strong { color: var(--text); font-weight: 600; }
+.comm-row span { color: var(--text-muted); }
+.scenario-grid-item { text-align: center; padding: 14px; border-radius: 8px; }
+.scenario-grid-item .sc-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+.scenario-grid-item .sc-value { font-size: 22px; font-weight: 700; font-family: 'Outfit', sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">P</div>
+    <div>
+      <h1>PetCare × VetWell</h1>
+      <div class="subtitle">Post-Merger Integration Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">Case Study — PMI Exam<br>March 2025</div>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<div class="nav" id="nav">
+  <button class="nav-btn active" data-tab="overview"><span class="nav-icon">◉</span> Overview</button>
+  <button class="nav-btn" data-tab="strategy"><span class="nav-icon">◈</span> Strategy</button>
+  <button class="nav-btn" data-tab="synergies"><span class="nav-icon">⬡</span> Synergies</button>
+  <button class="nav-btn" data-tab="financials"><span class="nav-icon">◆</span> P&L</button>
+  <button class="nav-btn" data-tab="operations"><span class="nav-icon">⚙</span> Operations</button>
+  <button class="nav-btn" data-tab="sensitivity"><span class="nav-icon">◎</span> Sensitivity</button>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  OVERVIEW TAB                            │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel active" id="tab-overview">
+
+  <div class="grid-4">
+    <div class="metric-card" style="--accent: var(--green);">
+      <div class="metric-label">Total Synergies Value</div>
+      <div class="metric-value">€21M</div>
+      <div class="metric-sub" style="color:var(--green)">Cumulative 2024-2027</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--teal);">
+      <div class="metric-label">2027 EBITDA (w/ Synergies)</div>
+      <div class="metric-value">€17.5M</div>
+      <div class="metric-sub">30% EBITDA Margin</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--gold);">
+      <div class="metric-label">Revenue Synergies</div>
+      <div class="metric-value">€14.5M</div>
+      <div class="metric-sub" style="color:var(--gold)">Brand + Cross-selling + Subs</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--purple);">
+      <div class="metric-label">Cost Synergies (Net)</div>
+      <div class="metric-value">€6.5M</div>
+      <div class="metric-sub" style="color:var(--purple)">€18M savings − €5.2M dissynergies</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">EBITDA Evolution: No Synergies vs. With Synergies (€M & Margin %)</div>
+    <div class="chart-wrap"><canvas id="chartEbitdaOverview" height="130"></canvas></div>
+  </div>
+
+  <div class="section-title"><h2>Post-Merger Business Model</h2><p>Comprehensive veterinary care platform combining PetCare's scale with VetWell's premium services</p></div>
+  <div class="grid-3">
+    <div class="info-card top-accent" style="--accent:var(--teal)"><h4 style="color:var(--teal)">Value Proposition</h4><p>Reliable routine & specialist care • 24/7 emergency hospital • Premium spa & home visits • AI-powered telemedicine</p></div>
+    <div class="info-card top-accent" style="--accent:var(--gold)"><h4 style="color:var(--gold)">Customer Segments</h4><p>Mainstream clients (affordable quality) • Premium segment (personalized) • Digitally engaged pet parents • Local communities across Lombardy</p></div>
+    <div class="info-card top-accent" style="--accent:var(--green)"><h4 style="color:var(--green)">Revenue Streams</h4><p>Standard treatments • Specialist surgeries • Telemedicine • Spa & premium services • Product sales • New subscriptions</p></div>
+    <div class="info-card top-accent" style="--accent:var(--purple)"><h4 style="color:var(--purple)">Key Activities</h4><p>Medical services delivery • Specialist coordination • Telemedicine operations • Premium services (spa, nutrition, home visits)</p></div>
+    <div class="info-card top-accent" style="--accent:var(--coral)"><h4 style="color:var(--coral)">Key Resources</h4><p>14 clinics network • 24/7 veterinary staff • VetWell's digital tools • Dual-brand equity</p></div>
+    <div class="info-card top-accent" style="--accent:var(--teal-light)"><h4 style="color:var(--teal-light)">Channels</h4><p>Physical clinics • Call center • VetWell's AI telemedicine platform • Web presence</p></div>
+  </div>
+
+  <div class="section-title"><h2>Potential Revenue Streams</h2><p>Three new revenue streams identified for the integrated entity</p></div>
+  <div class="grid-3">
+    <div class="info-card" style="background: linear-gradient(135deg, var(--card) 0%, rgba(0,151,167,0.04) 100%);">
+      <div style="font-size:36px;font-weight:800;color:rgba(0,151,167,0.25);font-family:'Outfit',sans-serif;margin-bottom:6px">01</div>
+      <h4 style="font-size:15px;color:var(--text)">Premium Digital Concierge</h4>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin:6px 0 12px">Monthly subscription fees with priority services & product upsells</p>
+      <span class="tag" style="background:rgba(0,151,167,0.15);color:var(--teal)">Recurring Subscription</span>
+    </div>
+    <div class="info-card" style="background: linear-gradient(135deg, var(--card) 0%, rgba(255,179,71,0.04) 100%);">
+      <div style="font-size:36px;font-weight:800;color:rgba(255,179,71,0.25);font-family:'Outfit',sans-serif;margin-bottom:6px">02</div>
+      <h4 style="font-size:15px;color:var(--text)">Smart Collar Integration</h4>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin:6px 0 12px">Vital signs monitoring with proactive alerts & predictive health analysis</p>
+      <span class="tag" style="background:rgba(255,179,71,0.15);color:var(--gold)">Device + Subscription</span>
+    </div>
+    <div class="info-card" style="background: linear-gradient(135deg, var(--card) 0%, rgba(255,107,107,0.04) 100%);">
+      <div style="font-size:36px;font-weight:800;color:rgba(255,107,107,0.25);font-family:'Outfit',sans-serif;margin-bottom:6px">03</div>
+      <h4 style="font-size:15px;color:var(--text)">Post-Surgery Care Programs</h4>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin:6px 0 12px">Tailored solutions via in-clinic, home visit, or remote guidance</p>
+      <span class="tag" style="background:rgba(255,107,107,0.15);color:var(--coral)">Fee-per-Session</span>
+    </div>
+  </div>
+</div>
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  STRATEGY TAB                            │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel" id="tab-strategy">
+
+  <div class="section-title"><h2>Integration Initiatives</h2><p>End-to-end integration plan across Brand, Operations, and Organizational Structure</p></div>
+
+  <div id="initCards" style="margin-bottom:28px"></div>
+
+  <div class="chart-card">
+    <div class="chart-title">Impact-Effort Matrix</div>
+    <div class="matrix-box">
+      <div class="matrix-line-v"></div><div class="matrix-line-h"></div>
+      <span class="matrix-label" style="top:8px;left:10px">DON'T COMBINE</span>
+      <span class="matrix-label" style="top:8px;right:10px">COMBINE CAREFULLY</span>
+      <span class="matrix-label" style="bottom:8px;left:10px">COMBINE SLOWLY</span>
+      <span class="matrix-label" style="bottom:8px;right:10px">COMBINE QUICKLY</span>
+      <span class="matrix-label" style="left:6px;top:50%;transform:rotate(-90deg) translateX(50%)">EFFORT ▲</span>
+      <span class="matrix-label" style="bottom:4px;left:50%;transform:translateX(-50%)">IMPACT ▶</span>
+      <div class="matrix-circle" style="left:78%;top:25%;width:46px;height:46px;background:rgba(255,179,71,0.2);border:2px solid var(--gold);color:var(--gold)">1</div>
+      <div class="matrix-circle" style="left:82%;top:68%;width:38px;height:38px;background:rgba(74,222,128,0.2);border:2px solid var(--green);color:var(--green)">2</div>
+      <div class="matrix-circle" style="left:72%;top:45%;width:42px;height:42px;background:rgba(255,179,71,0.2);border:2px solid var(--gold);color:var(--gold)">3</div>
+      <div class="matrix-circle" style="left:56%;top:52%;width:40px;height:40px;background:rgba(167,139,250,0.2);border:2px solid var(--purple);color:var(--purple)">4</div>
+      <div class="matrix-circle" style="left:85%;top:18%;width:44px;height:44px;background:rgba(255,179,71,0.2);border:2px solid var(--gold);color:var(--gold)">5</div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>New Organizational Structure</h2><p>Integrated and scalable model combining clinical excellence with centralized operations</p></div>
+  <div class="chart-card" style="overflow-x:auto">
+    <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:700px;max-width:900px;margin:0 auto;display:block" font-family="'DM Sans', sans-serif">
+      <!-- CONNECTOR LINES -->
+      <g stroke="#2D3748" stroke-width="1.5" fill="none">
+        <!-- CEO to C-Suite horizontal bar -->
+        <line x1="450" y1="52" x2="450" y2="80"/>
+        <line x1="170" y1="80" x2="730" y2="80"/>
+        <!-- Verticals down to COO, CMO, CFO -->
+        <line x1="170" y1="80" x2="170" y2="100"/>
+        <line x1="450" y1="80" x2="450" y2="100"/>
+        <line x1="730" y1="80" x2="730" y2="100"/>
+        <!-- COO to departments -->
+        <line x1="170" y1="148" x2="170" y2="175"/>
+        <line x1="70" y1="175" x2="270" y2="175"/>
+        <line x1="70" y1="175" x2="70" y2="195"/>
+        <line x1="137" y1="175" x2="137" y2="195"/>
+        <line x1="203" y1="175" x2="203" y2="195"/>
+        <line x1="270" y1="175" x2="270" y2="195"/>
+        <!-- CMO to Health/Wellness -->
+        <line x1="450" y1="148" x2="450" y2="175"/>
+        <line x1="370" y1="175" x2="530" y2="175"/>
+        <line x1="370" y1="175" x2="370" y2="195"/>
+        <line x1="530" y1="175" x2="530" y2="195"/>
+        <!-- Health/Wellness to Clinics -->
+        <line x1="370" y1="233" x2="370" y2="258"/>
+        <line x1="310" y1="258" x2="430" y2="258"/>
+        <line x1="310" y1="258" x2="310" y2="278"/>
+        <line x1="430" y1="258" x2="430" y2="278"/>
+        <line x1="530" y1="233" x2="530" y2="258"/>
+        <line x1="530" y1="258" x2="530" y2="278"/>
+        <!-- Clinics to Staff row -->
+        <line x1="310" y1="318" x2="310" y2="345"/>
+        <line x1="430" y1="318" x2="430" y2="345"/>
+        <line x1="530" y1="318" x2="530" y2="345"/>
+        <line x1="310" y1="345" x2="640" y2="345"/>
+        <!-- Down to staff types -->
+        <line x1="310" y1="345" x2="310" y2="365"/>
+        <line x1="420" y1="345" x2="420" y2="365"/>
+        <line x1="530" y1="345" x2="530" y2="365"/>
+        <line x1="640" y1="345" x2="640" y2="365"/>
+      </g>
+
+      <!-- CEO -->
+      <rect x="390" y="16" width="120" height="36" rx="8" fill="rgba(0,151,167,0.15)" stroke="#0097A7" stroke-width="2"/>
+      <text x="450" y="40" text-anchor="middle" fill="#0097A7" font-size="14" font-weight="700">CEO</text>
+
+      <!-- COO -->
+      <rect x="110" y="100" width="120" height="36" rx="8" fill="rgba(255,179,71,0.1)" stroke="#FFB347" stroke-width="1.5"/>
+      <text x="170" y="124" text-anchor="middle" fill="#FFB347" font-size="13" font-weight="700">COO</text>
+      <text x="170" y="162" text-anchor="middle" fill="#94A3B8" font-size="10">Shared Services</text>
+
+      <!-- CMO -->
+      <rect x="390" y="100" width="120" height="36" rx="8" fill="rgba(74,222,128,0.1)" stroke="#4ADE80" stroke-width="1.5"/>
+      <text x="450" y="124" text-anchor="middle" fill="#4ADE80" font-size="13" font-weight="700">CMO</text>
+      <text x="450" y="162" text-anchor="middle" fill="#94A3B8" font-size="10">Clinical Governance</text>
+
+      <!-- CFO -->
+      <rect x="670" y="100" width="120" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#A78BFA" stroke-width="1.5"/>
+      <text x="730" y="124" text-anchor="middle" fill="#A78BFA" font-size="13" font-weight="700">CFO</text>
+      <text x="730" y="162" text-anchor="middle" fill="#94A3B8" font-size="10">Financial Governance</text>
+
+      <!-- COO Departments -->
+      <rect x="35" y="195" width="70" height="28" rx="6" fill="rgba(255,179,71,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="70" y="214" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">HR</text>
+      <rect x="102" y="195" width="70" height="28" rx="6" fill="rgba(255,179,71,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="137" y="214" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">Marketing</text>
+      <rect x="168" y="195" width="70" height="28" rx="6" fill="rgba(255,179,71,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="203" y="214" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">IT</text>
+      <rect x="235" y="195" width="70" height="28" rx="6" fill="rgba(255,179,71,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="270" y="214" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">Procure.</text>
+
+      <!-- Health Manager -->
+      <rect x="315" y="195" width="110" height="38" rx="7" fill="rgba(74,222,128,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="370" y="211" text-anchor="middle" fill="#4ADE80" font-size="11" font-weight="600">Health</text>
+      <text x="370" y="225" text-anchor="middle" fill="#4ADE80" font-size="11" font-weight="600">Manager</text>
+
+      <!-- Wellness Manager -->
+      <rect x="475" y="195" width="110" height="38" rx="7" fill="rgba(74,222,128,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="530" y="211" text-anchor="middle" fill="#4ADE80" font-size="11" font-weight="600">Wellness</text>
+      <text x="530" y="225" text-anchor="middle" fill="#4ADE80" font-size="11" font-weight="600">Manager</text>
+
+      <!-- PetCare Clinics -->
+      <rect x="260" y="278" width="100" height="40" rx="7" fill="rgba(0,151,167,0.1)" stroke="#0097A7" stroke-width="1.5"/>
+      <text x="310" y="295" text-anchor="middle" fill="#0097A7" font-size="10" font-weight="600">PetCare Clinics</text>
+      <text x="310" y="310" text-anchor="middle" fill="#0097A7" font-size="13" font-weight="700">×10</text>
+
+      <!-- VetWell Clinics under Health -->
+      <rect x="380" y="278" width="100" height="40" rx="7" fill="rgba(255,179,71,0.1)" stroke="#FFB347" stroke-width="1.5"/>
+      <text x="430" y="295" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">VetWell Clinics</text>
+      <text x="430" y="310" text-anchor="middle" fill="#FFB347" font-size="13" font-weight="700">×4</text>
+
+      <!-- Backoffice -->
+      <rect x="485" y="278" width="90" height="40" rx="7" fill="rgba(167,139,250,0.08)" stroke="#2D3748" stroke-width="1"/>
+      <text x="530" y="295" text-anchor="middle" fill="#A78BFA" font-size="10" font-weight="600">Backoffice</text>
+      <text x="530" y="310" text-anchor="middle" fill="#A78BFA" font-size="10" font-weight="600">Management</text>
+
+      <!-- Staff Types -->
+      <rect x="260" y="365" width="100" height="34" rx="6" fill="rgba(0,151,167,0.06)" stroke="#2D3748" stroke-width="1"/>
+      <text x="310" y="379" text-anchor="middle" fill="#0097A7" font-size="10" font-weight="600">Base Vets</text>
+      <text x="310" y="393" text-anchor="middle" fill="#94A3B8" font-size="10">80</text>
+
+      <rect x="370" y="365" width="100" height="34" rx="6" fill="rgba(255,179,71,0.06)" stroke="#2D3748" stroke-width="1"/>
+      <text x="420" y="379" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">Specialist Vets</text>
+      <text x="420" y="393" text-anchor="middle" fill="#94A3B8" font-size="10">30</text>
+
+      <rect x="480" y="365" width="100" height="34" rx="6" fill="rgba(255,107,107,0.06)" stroke="#2D3748" stroke-width="1"/>
+      <text x="530" y="379" text-anchor="middle" fill="#FF6B6B" font-size="10" font-weight="600">Base Surgeons</text>
+      <text x="530" y="393" text-anchor="middle" fill="#94A3B8" font-size="10">20</text>
+
+      <rect x="590" y="365" width="100" height="34" rx="6" fill="rgba(167,139,250,0.06)" stroke="#2D3748" stroke-width="1"/>
+      <text x="640" y="379" text-anchor="middle" fill="#A78BFA" font-size="10" font-weight="600">Spa Operators</text>
+      <text x="640" y="393" text-anchor="middle" fill="#94A3B8" font-size="10">7</text>
+
+      <!-- Integration Office -->
+      <rect x="620" y="15" width="200" height="38" rx="8" fill="rgba(255,179,71,0.06)" stroke="#FFB347" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="720" y="31" text-anchor="middle" fill="#FFB347" font-size="10" font-weight="600">Integration Office</text>
+      <text x="720" y="45" text-anchor="middle" fill="#94A3B8" font-size="9">12-18 months · CEO supervision</text>
+      <line x1="620" y1="34" x2="510" y2="34" stroke="#FFB347" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+
+      <!-- Note -->
+      <text x="450" y="440" text-anchor="middle" fill="#94A3B8" font-size="10" font-style="italic">Staff allocated per clinic based on service needs · Three pillars: Corporate Operations, Medical Excellence, Financial Governance</text>
+
+      <!-- Pillar Labels -->
+      <rect x="35" y="460" width="260" height="32" rx="6" fill="rgba(255,179,71,0.06)" stroke="none"/>
+      <text x="165" y="481" text-anchor="middle" fill="#FFB347" font-size="11" font-weight="600">Corporate Operations</text>
+      <rect x="320" y="460" width="260" height="32" rx="6" fill="rgba(74,222,128,0.06)" stroke="none"/>
+      <text x="450" y="481" text-anchor="middle" fill="#4ADE80" font-size="11" font-weight="600">Medical Excellence</text>
+      <rect x="605" y="460" width="260" height="32" rx="6" fill="rgba(167,139,250,0.06)" stroke="none"/>
+      <text x="735" y="481" text-anchor="middle" fill="#A78BFA" font-size="11" font-weight="600">Financial Governance</text>
+    </svg>
+  </div>
+
+  <div class="section-title"><h2>Governance Structure</h2><p>Strategic control, operational speed, and full accountability</p></div>
+  <div class="grid-2">
+    <div class="info-card"><h4 style="color:var(--teal)">Integration Steering Committee</h4><p>CEOs of PetCare & VetWell, CFO, Medical Officers</p><div style="font-size:10px;color:var(--gold);margin-top:6px">Monthly reviews</div></div>
+    <div class="info-card"><h4 style="color:var(--teal)">Integration Coordinator</h4><p>CEO of PetCare — sponsors execution, resolves bottlenecks</p><div style="font-size:10px;color:var(--gold);margin-top:6px">Ongoing execution</div></div>
+    <div class="info-card"><h4 style="color:var(--teal)">PMO</h4><p>M&A Consultant Lead — structured reporting, risk identification</p><div style="font-size:10px;color:var(--gold);margin-top:6px">Maintains Gantt, synergy tracker</div></div>
+    <div class="info-card"><h4 style="color:var(--teal)">Change Management Committee</h4><p>Head of Comms, HR, IT leads + Consultants</p><div style="font-size:10px;color:var(--gold);margin-top:6px">Feedback-driven</div></div>
+  </div>
+</div>
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  SYNERGIES TAB                           │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel" id="tab-synergies">
+
+  <div class="grid-4">
+    <div class="metric-card" style="--accent:var(--green)"><div class="metric-label">Revenue Synergies</div><div class="metric-value">€14.5M</div><div class="metric-sub" style="color:var(--green)">Brand + Cross-selling + Subs</div></div>
+    <div class="metric-card" style="--accent:var(--teal)"><div class="metric-label">Gross Cost Reduction</div><div class="metric-value">€18.0M</div><div class="metric-sub">TPP + Materials + Booking + Staff</div></div>
+    <div class="metric-card" style="--accent:var(--coral)"><div class="metric-label">Dissynergies / Extra Costs</div><div class="metric-value">€5.2M</div><div class="metric-sub" style="color:var(--coral)">Salary + IT + Training + Change Mgmt</div></div>
+    <div class="metric-card" style="--accent:var(--gold)"><div class="metric-label">Net Total Synergies</div><div class="metric-value">€21.0M</div><div class="metric-sub" style="color:var(--gold)">Cumulative 2024-2027</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Synergies Quantification — Waterfall (€M, Cumulative)</div>
+    <div class="chart-wrap"><canvas id="chartWaterfall" height="140"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Net Synergies Yearly Evolution (€M)</div>
+    <div class="chart-wrap"><canvas id="chartNetSyn" height="120"></canvas></div>
+  </div>
+
+  <div class="section-title"><h2>Synergies & Dissynergies Detail</h2><p>High-level synergies and potential dissynergies from the integration</p></div>
+  <div class="grid-2">
+    <div class="info-card">
+      <h4 style="color:var(--green);font-size:14px;margin-bottom:14px">High-Level Synergies</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><h5>Digital Transformation & CRM</h5><p>VetWell's AI CRM across PetCare: automate scheduling, cut admin workload</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><h5>Service Expansion & Revenue Growth</h5><p>Cross-selling premium services, bundled offerings, new subscription models</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><h5>Operational Efficiency</h5><p>Centralized procurement, reduced TPP costs via bulk purchasing</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><h5>Talent Development</h5><p>Standardized training, AI diagnostics across all clinics</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><h5>Premium Brand Differentiation</h5><p>Dual-brand: VetWell by PetCare for premium + PetCare for mainstream</p></div>
+    </div>
+    <div class="info-card">
+      <h4 style="color:var(--coral);font-size:14px;margin-bottom:14px">Potential Dissynergies</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,107,107,0.3)"><h5>High Upfront IT Costs</h5><p>PetCare's basic IT not compatible — major investment in migration & training</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,107,107,0.3)"><h5>Rebranding Expenses</h5><p>Targeted marketing for brand continuity — assumed neutral via efficiency gains</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,107,107,0.3)"><h5>Increased Labour Costs</h5><p>Hiring specialized vets + salary harmonization drives up payroll</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,107,107,0.3)"><h5>Cultural Integration Challenges</h5><p>Different cultures & service models — needs change management investment</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  FINANCIALS TAB                          │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel" id="tab-financials">
+
+  <div class="section-title"><h2>P&L Comparison: No Synergies vs. With Synergies</h2><p>Numbers in € Millions — 2024 vs 2027 projections</p></div>
+  <div class="chart-card">
+    <table class="pnl-table">
+      <thead>
+        <tr><th style="text-align:left"></th><th colspan="2" style="text-align:center;border-bottom:2px solid var(--border)">NO SYNERGIES</th><th colspan="2" style="text-align:center;border-bottom:2px solid var(--teal);color:var(--teal)">WITH SYNERGIES</th></tr>
+        <tr><th style="text-align:left">€ Millions</th><th class="right muted-col">2024</th><th class="right muted-col">2027</th><th class="right syn-col">2024</th><th class="right syn-col">2027</th></tr>
+      </thead>
+      <tbody>
+        <tr class="section-header"><td colspan="5" style="color:var(--teal)">Revenues</td></tr>
+        <tr><td>Standard Treatments</td><td class="right muted-col">44.2</td><td class="right muted-col">47.4</td><td class="right syn-col">44.2</td><td class="right syn-col">52.3</td></tr>
+        <tr><td>Premium Treatments</td><td class="right muted-col">1.8</td><td class="right muted-col">2.0</td><td class="right syn-col">1.8</td><td class="right syn-col">2.5</td></tr>
+        <tr><td>New Subscription</td><td class="right muted-col">—</td><td class="right muted-col">—</td><td class="right syn-col">—</td><td class="right syn-col">3.6</td></tr>
+        <tr class="total-row"><td>TOT.</td><td class="right muted-col">45.9</td><td class="right muted-col">49.4</td><td class="right syn-col">45.9</td><td class="right syn-col">58.4</td></tr>
+        <tr class="section-header"><td colspan="5" style="color:var(--coral)">Costs</td></tr>
+        <tr><td>Labour</td><td class="right muted-col">13.3</td><td class="right muted-col">14.4</td><td class="right syn-col">13.3</td><td class="right syn-col">17.2</td></tr>
+        <tr><td>Training</td><td class="right muted-col">0.3</td><td class="right muted-col">0.3</td><td class="right syn-col">0.3</td><td class="right syn-col">0.4</td></tr>
+        <tr><td>G&A (Staff)</td><td class="right muted-col">2.2</td><td class="right muted-col">2.2</td><td class="right syn-col">2.2</td><td class="right syn-col">1.4</td></tr>
+        <tr><td>Third Party Professionals</td><td class="right muted-col">10.4</td><td class="right muted-col">11.0</td><td class="right syn-col">10.4</td><td class="right syn-col">5.1</td></tr>
+        <tr><td>Other services</td><td class="right muted-col">4.5</td><td class="right muted-col">4.5</td><td class="right syn-col">4.5</td><td class="right syn-col">4.1</td></tr>
+        <tr><td>Materials</td><td class="right muted-col">7.9</td><td class="right muted-col">8.5</td><td class="right syn-col">7.9</td><td class="right syn-col">6.4</td></tr>
+        <tr><td>Marketing & Comm.</td><td class="right muted-col">1.1</td><td class="right muted-col">1.1</td><td class="right syn-col">1.1</td><td class="right syn-col">1.1</td></tr>
+        <tr><td>IT service</td><td class="right muted-col">2.3</td><td class="right muted-col">2.3</td><td class="right syn-col">2.3</td><td class="right syn-col">4.6</td></tr>
+        <tr><td>Change Management</td><td class="right muted-col">—</td><td class="right muted-col">—</td><td class="right syn-col">—</td><td class="right syn-col">0.6</td></tr>
+        <tr class="total-row"><td>TOT.</td><td class="right muted-col">41.9</td><td class="right muted-col">44.2</td><td class="right syn-col">41.9</td><td class="right syn-col">40.9</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card"><div class="chart-title">Revenue Breakdown With Synergies (€M)</div><div class="chart-wrap"><canvas id="chartRevBreakdown" height="140"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Cost Breakdown With Synergies (€M)</div><div class="chart-wrap"><canvas id="chartCostBreakdown" height="140"></canvas></div></div>
+  </div>
+
+  <div class="section-title"><h2>KPI Comparison (2027)</h2><p>Key performance indicators comparing 2027 projections</p></div>
+  <div class="grid-4">
+    <div class="info-card"><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Labour Cost %</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-size:9px;color:var(--text-muted)">No Syn</div><div style="font-size:20px;font-weight:700;color:var(--text-muted);font-family:'Outfit',sans-serif">29.1%</div></div><div style="font-size:16px;color:var(--text-muted)">→</div><div style="text-align:right"><div style="font-size:9px;color:var(--teal)">With Syn</div><div style="font-size:20px;font-weight:700;color:var(--teal);font-family:'Outfit',sans-serif">29.4%</div></div></div></div>
+    <div class="info-card"><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Material Cost %</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-size:9px;color:var(--text-muted)">No Syn</div><div style="font-size:20px;font-weight:700;color:var(--text-muted);font-family:'Outfit',sans-serif">17.1%</div></div><div style="font-size:16px;color:var(--green)">→</div><div style="text-align:right"><div style="font-size:9px;color:var(--teal)">With Syn</div><div style="font-size:20px;font-weight:700;color:var(--teal);font-family:'Outfit',sans-serif">10.9%</div></div></div></div>
+    <div class="info-card"><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">TPP Cost %</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-size:9px;color:var(--text-muted)">No Syn</div><div style="font-size:20px;font-weight:700;color:var(--text-muted);font-family:'Outfit',sans-serif">22.3%</div></div><div style="font-size:16px;color:var(--green)">→</div><div style="text-align:right"><div style="font-size:9px;color:var(--teal)">With Syn</div><div style="font-size:20px;font-weight:700;color:var(--teal);font-family:'Outfit',sans-serif">8.7%</div></div></div></div>
+    <div class="info-card"><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Staff Cost %</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-size:9px;color:var(--text-muted)">No Syn</div><div style="font-size:20px;font-weight:700;color:var(--text-muted);font-family:'Outfit',sans-serif">4.4%</div></div><div style="font-size:16px;color:var(--green)">→</div><div style="text-align:right"><div style="font-size:9px;color:var(--teal)">With Syn</div><div style="font-size:20px;font-weight:700;color:var(--teal);font-family:'Outfit',sans-serif">2.5%</div></div></div></div>
+  </div>
+</div>
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  OPERATIONS TAB                          │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel" id="tab-operations">
+
+  <div class="section-title"><h2>Post-Merger Operating Model</h2><p>Leveraging VetWell's innovative know-how with PetCare's scale of operations</p></div>
+  <div class="grid-3">
+    <div class="info-card top-accent" style="--accent:var(--gold)"><h4 style="color:var(--gold)">★ Premium Service Delivery</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><p>Tiered offerings for all client segments</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><p>Wellness + remote monitoring bundles</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><p>24/7 AI-powered emergency support</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><p>Convenient home consultations</p></div>
+    </div>
+    <div class="info-card top-accent" style="--accent:var(--green)"><h4 style="color:var(--green)">⚡ Operational Efficiency</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><p>52% reduction in Service Costs (€5.6M)</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><p>€1.5M decrease in Materials costs</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><p>Standardized training & insourced booking</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(74,222,128,0.3)"><p>Centralized procurement operations</p></div>
+    </div>
+    <div class="info-card top-accent" style="--accent:var(--teal)"><h4 style="color:var(--teal)">🚀 Future-Oriented Growth</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Hub-and-Spoke clinic model</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Data-driven resource optimization</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Cloud-based scalable systems</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Seamless clinic onboarding</p></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card"><div class="chart-title">Workforce Evolution (Headcount)</div><div class="chart-wrap"><canvas id="chartWorkforce" height="140"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Service & Materials Cost Reduction (€M)</div><div class="chart-wrap"><canvas id="chartCostEvo" height="140"></canvas></div></div>
+  </div>
+
+  <div class="section-title"><h2>Change Management & Training</h2><p>Clear communication and structured training to ensure smooth integration</p></div>
+  <div class="grid-2">
+    <div class="info-card">
+      <h4 style="color:var(--teal);font-size:14px;margin-bottom:14px">Communication Techniques</h4>
+      <div class="comm-row"><strong>Customer Kit</strong><span>VetWell clients · Launch / Refresh</span></div>
+      <div class="comm-row"><strong>Leadership Update</strong><span>All employees · Monthly</span></div>
+      <div class="comm-row"><strong>Clinic Feedback Loop</strong><span>Clinic staff · Weekly</span></div>
+      <div class="comm-row"><strong>Open Q&A Sessions</strong><span>All employees · As needed</span></div>
+    </div>
+    <div class="info-card">
+      <h4 style="color:var(--gold);font-size:14px;margin-bottom:14px">Training Programs</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><h5>IT & Digital Training</h5><p>Clinical & admin staff — Micro-learning, scenario-based</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><h5>Service Excellence</h5><p>Vets, nurses, front-desk — Cross-training, AI diagnostics workshops</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(255,179,71,0.3)"><h5>Cultural Integration</h5><p>All employees — Gamified onboarding, local Change Agents</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ┌──────────────────────────────────────────┐ -->
+<!-- │  SENSITIVITY TAB                         │ -->
+<!-- └──────────────────────────────────────────┘ -->
+<div class="tab-panel" id="tab-sensitivity">
+
+  <div class="section-title"><h2>Sensitivity Analysis</h2><p>Toggle scenarios to observe how changes in assumptions impact synergies and financial outcomes</p></div>
+
+  <div class="scenario-btns">
+    <button class="scenario-btn" data-sc="pessimistic">Pessimistic</button>
+    <button class="scenario-btn active" data-sc="baseline">Baseline</button>
+    <button class="scenario-btn" data-sc="optimistic">Optimistic</button>
+  </div>
+
+  <div class="grid-3" id="scenarioAssumptions"></div>
+
+  <div class="chart-card">
+    <div class="chart-title" id="scenarioChartTitle">EBITDA Projection — Baseline Scenario (€M)</div>
+    <div class="chart-wrap"><canvas id="chartSensitivity" height="130"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">EBITDA Comparison Across All Scenarios (2027, €M)</div>
+    <div class="chart-wrap"><canvas id="chartAllScenarios" height="110"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="info-card">
+      <h4 style="color:var(--teal);font-size:14px;margin-bottom:12px">Key Sensitivity Drivers</h4>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Customer base growth rate (brand consolidation effect)</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Special treatment demand (cross-selling effectiveness)</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Subscription model adoption & pricing</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Staff layoffs & hiring timeline</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Base Vets vs. Specialist Vets rebalancing</p></div>
+      <div class="syn-item border-left-accent" style="border-color:rgba(0,151,167,0.3)"><p>Change management budget allocation</p></div>
+    </div>
+    <div class="info-card">
+      <h4 style="color:var(--gold);font-size:14px;margin-bottom:14px">Cumulative Net Synergies by Scenario</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px">
+        <div class="scenario-grid-item" style="background:rgba(255,107,107,0.1);border-radius:8px"><div class="sc-label">Pessimistic</div><div class="sc-value" style="color:var(--coral)">€13.7M</div></div>
+        <div class="scenario-grid-item" style="background:rgba(0,151,167,0.1);border-radius:8px"><div class="sc-label">Baseline</div><div class="sc-value" style="color:var(--teal)">€21.0M</div></div>
+        <div class="scenario-grid-item" style="background:rgba(74,222,128,0.1);border-radius:8px"><div class="sc-label">Optimistic</div><div class="sc-value" style="color:var(--green)">€26.3M</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- ═══ JAVASCRIPT ═══ -->
+<script>
+// ── TAB NAVIGATION ──────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── CHART DEFAULTS ──────────────────────────────────────
+Chart.defaults.color = '#94A3B8';
+Chart.defaults.borderColor = '#2D3748';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+const TEAL='#0097A7', TEAL_L='#4DD0E1', GOLD='#FFB347', CORAL='#FF6B6B', GREEN='#4ADE80', PURPLE='#A78BFA', MUTED='#94A3B8';
+
+// ── 1) EBITDA OVERVIEW CHART ───────────────────────────
+new Chart(document.getElementById('chartEbitdaOverview'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'EBITDA No Synergies', data: [4.0,4.4,4.8,5.2], backgroundColor: MUTED+'90', borderRadius: 4, barPercentage: 0.5 },
+      { label: 'EBITDA With Synergies', data: [4.0,6.7,11.1,17.5], backgroundColor: TEAL, borderRadius: 4, barPercentage: 0.5 },
+      { label: 'Margin No Syn %', data: [8.7,9.3,9.9,10.5], type:'line', borderColor: MUTED, borderWidth: 2, pointRadius: 4, borderDash:[5,5], yAxisID:'y1', tension: 0.3 },
+      { label: 'Margin With Syn %', data: [8.7,13.8,21.3,30.0], type:'line', borderColor: GREEN, borderWidth: 2, pointRadius: 4, yAxisID:'y1', tension: 0.3 }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: '€M' } },
+      y1: { position: 'right', beginAtZero: true, title: { display: true, text: 'Margin %' }, grid: { drawOnChartArea: false }, ticks: { callback: v => v+'%' } }
+    }
+  }
+});
+
+// ── 2) WATERFALL ───────────────────────────────────────
+new Chart(document.getElementById('chartWaterfall'), {
+  type: 'bar',
+  data: {
+    labels: ['Brand &\nCross-sell','Subscriptions','Revenue\nSynergies','Layoffs\n(Staff)','TPP\nReduction','Booking\nService','Materials','Cost\nSynergies','Salary\nIncrease','IT\nServices','Training','Change\nMgmt','Net Total\nSynergies'],
+    datasets: [{
+      data: [9.9, 4.5, 14.5, 0.65, 11.5, 0.65, 4.1, 17.95, -4.6, -1.6, -1.7, -0.12, 21.0],
+      backgroundColor: [GREEN,TEAL_L,TEAL, GREEN,GREEN,GREEN,GREEN,TEAL, CORAL,CORAL,CORAL,CORAL, GOLD],
+      borderRadius: 4, barPercentage: 0.7
+    }]
+  },
+  options: {
+    responsive: true, plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, title: { display: true, text: '€M' } }, x: { ticks: { maxRotation: 45, font: { size: 10 } } } }
+  }
+});
+
+// ── 3) NET SYNERGIES ──────────────────────────────────
+new Chart(document.getElementById('chartNetSyn'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'Revenue Synergies', data: [0, 1.39, 4.07, 9.03], backgroundColor: GREEN, borderRadius: 4, barPercentage: 0.45 },
+      { label: 'Cost Dissynergies', data: [0, -0.93, -2.27, -3.31], backgroundColor: CORAL, borderRadius: 4, barPercentage: 0.45 },
+      { label: 'Net Synergies', data: [0, 0.45, 1.80, 5.72], type:'line', borderColor: GOLD, borderWidth: 3, pointRadius: 5, pointBackgroundColor: GOLD, tension: 0.3 }
+    ]
+  },
+  options: { responsive: true, scales: { y: { title: { display: true, text: '€M' } } } }
+});
+
+// ── 4) REVENUE BREAKDOWN ──────────────────────────────
+new Chart(document.getElementById('chartRevBreakdown'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'Routine', data: [13.3,14.0,14.8,15.8], backgroundColor: TEAL, stack: 'a' },
+      { label: 'Basic Surgery', data: [5.7,6.0,6.4,6.8], backgroundColor: TEAL_L, stack: 'a' },
+      { label: 'Spec. Check', data: [4.2,4.4,4.6,4.9], backgroundColor: GOLD, stack: 'a' },
+      { label: 'Spec. Surgery', data: [21.0,22.1,23.4,24.9], backgroundColor: PURPLE, stack: 'a' },
+      { label: 'Premium', data: [1.8,1.9,2.0,2.5], backgroundColor: CORAL, stack: 'a' },
+      { label: 'Subscriptions', data: [0,0,0.9,3.6], backgroundColor: GREEN, stack: 'a', borderRadius: {topLeft:4,topRight:4} }
+    ]
+  },
+  options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, title: { display:true, text:'€M' } } } }
+});
+
+// ── 5) COST BREAKDOWN ─────────────────────────────────
+new Chart(document.getElementById('chartCostBreakdown'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'Labour', data: [13.3,14.4,15.6,17.2], backgroundColor: CORAL, stack: 'a' },
+      { label: 'TPP', data: [10.4,8.7,7.1,5.1], backgroundColor: GOLD, stack: 'a' },
+      { label: 'Materials', data: [7.9,7.4,6.9,6.4], backgroundColor: PURPLE, stack: 'a' },
+      { label: 'IT', data: [2.3,3.0,4.0,4.6], backgroundColor: TEAL, stack: 'a' },
+      { label: 'Other', data: [8.0,8.2,7.6,7.7], backgroundColor: MUTED+'80', stack: 'a', borderRadius: {topLeft:4,topRight:4} }
+    ]
+  },
+  options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, title: { display:true, text:'€M' } } } }
+});
+
+// ── 6) WORKFORCE ──────────────────────────────────────
+new Chart(document.getElementById('chartWorkforce'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'Staff', data: [40,36,24,24], backgroundColor: MUTED+'80', stack: 'a' },
+      { label: 'Surgeons', data: [20,20,20,20], backgroundColor: CORAL, stack: 'a' },
+      { label: 'Base Vets', data: [155,155,150,140], backgroundColor: TEAL, stack: 'a' },
+      { label: 'Specialist Vets', data: [20,30,40,52], backgroundColor: GOLD, stack: 'a' },
+      { label: 'Spa Operators', data: [7,7,7,7], backgroundColor: PURPLE, stack: 'a', borderRadius: {topLeft:4,topRight:4} }
+    ]
+  },
+  options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, title: { display:true, text:'Headcount' } } } }
+});
+
+// ── 7) COST EVOLUTION ─────────────────────────────────
+new Chart(document.getElementById('chartCostEvo'), {
+  type: 'bar',
+  data: {
+    labels: ['2024','2025','2026','2027'],
+    datasets: [
+      { label: 'Services (TPP+Booking)', data: [10.7, 9.0, 7.2, 5.1], backgroundColor: TEAL, borderRadius: 4, barPercentage: 0.5 },
+      { label: 'Materials', data: [7.9, 7.4, 6.9, 6.4], backgroundColor: CORAL, borderRadius: 4, barPercentage: 0.5 }
+    ]
+  },
+  options: { responsive: true, scales: { y: { title: { display:true, text:'€M' } } } }
+});
+
+// ── INITIATIVE CARDS ──────────────────────────────────
+const inits = [
+  { id:1, name:'Tiered Brand Strategy', quadrant:'Combine Carefully', color: GOLD, desc:'Maintain "VetWell by PetCare" for premium clients with dual-brand model' },
+  { id:2, name:'Procurement Optimization', quadrant:'Combine Quickly', color: GREEN, desc:'Centralize procurement, bulk purchasing, consolidate suppliers' },
+  { id:3, name:'Unification of IT Systems', quadrant:'Combine Carefully', color: GOLD, desc:'Replace PetCare IT with VetWell\'s AI-driven CRM platform' },
+  { id:4, name:'Staff Functions Centralization', quadrant:'Combine Slowly', color: PURPLE, desc:'Shared Services Center for payroll, procurement, reporting' },
+  { id:5, name:'Workforce Upskilling', quadrant:'Combine Carefully', color: GOLD, desc:'Cross-training programs, Center of Excellence, specialist rotations' }
+];
+const ic = document.getElementById('initCards');
+inits.forEach(i => {
+  ic.innerHTML += `<div class="init-card"><div class="init-num" style="background:${i.color}20;color:${i.color}">${i.id}</div><div class="init-body"><div class="init-name">${i.name}</div><div class="init-desc">${i.desc}</div><div class="init-tags"><span class="tag" style="background:${i.color}20;color:${i.color}">${i.quadrant}</span></div></div></div>`;
+});
+
+// ── SENSITIVITY ───────────────────────────────────────
+const scenarios = {
+  baseline:     { label:'Baseline',     cg:[3,3.5,4],   ti:[5,7.5,10],  se:[0,180,360], ebitda:[4.0,6.7,11.1,17.5], margin:[8.7,13.8,21.3,30.0], color: TEAL },
+  pessimistic:  { label:'Pessimistic',  cg:[1,1.5,2],   ti:[1,3,5],     se:[0,120,200], ebitda:[4.0,5.2,8.0,11.4],  margin:[8.7,10.7,15.3,19.5], color: CORAL },
+  optimistic:   { label:'Optimistic',   cg:[4,4.5,5],   ti:[7,9,12],    se:[0,220,450], ebitda:[4.0,7.5,13.1,21.9], margin:[8.7,15.5,25.1,37.5], color: GREEN }
+};
+
+let sensitivityChart = null;
+function updateSensitivity(key) {
+  const sc = scenarios[key];
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.toggle('active', b.dataset.sc === key));
+  document.getElementById('scenarioChartTitle').textContent = `EBITDA Projection — ${sc.label} Scenario (€M)`;
+
+  // Assumptions
+  const aBox = document.getElementById('scenarioAssumptions');
+  aBox.innerHTML = `
+    <div class="info-card"><h4 style="color:var(--teal);font-size:12px;margin-bottom:10px">Customer Base Growth (YoY)</h4>${sc.cg.map((v,i) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text-muted)">${2025+i}</span><span style="color:var(--text);font-weight:600">+${v}%</span></div>`).join('')}</div>
+    <div class="info-card"><h4 style="color:var(--gold);font-size:12px;margin-bottom:10px">Treatment Demand Increase (%)</h4>${sc.ti.map((v,i) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text-muted)">${2025+i}</span><span style="color:var(--text);font-weight:600">+${v}%</span></div>`).join('')}</div>
+    <div class="info-card"><h4 style="color:var(--green);font-size:12px;margin-bottom:10px">Avg. Yearly Subscription (€)</h4>${sc.se.map((v,i) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--text-muted)">${2025+i}</span><span style="color:var(--text);font-weight:600">€${v}</span></div>`).join('')}</div>
+  `;
+
+  // Chart
+  if (sensitivityChart) sensitivityChart.destroy();
+  sensitivityChart = new Chart(document.getElementById('chartSensitivity'), {
+    type: 'bar',
+    data: {
+      labels: ['2024','2025','2026','2027'],
+      datasets: [
+        { label: 'EBITDA (€M)', data: sc.ebitda, backgroundColor: sc.color, borderRadius: 4, barPercentage: 0.45, yAxisID: 'y' },
+        { label: 'EBITDA Margin %', data: sc.margin, type:'line', borderColor: GOLD, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GOLD, yAxisID: 'y1', tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: '€M' } },
+        y1: { position:'right', beginAtZero:true, title:{display:true,text:'%'}, grid:{drawOnChartArea:false}, ticks:{callback:v=>v+'%'} }
+      }
+    }
+  });
+}
+
+document.querySelectorAll('.scenario-btn').forEach(b => b.addEventListener('click', () => updateSensitivity(b.dataset.sc)));
+updateSensitivity('baseline');
+
+// ── ALL SCENARIOS COMPARISON ──────────────────────────
+new Chart(document.getElementById('chartAllScenarios'), {
+  type: 'bar',
+  data: {
+    labels: ['Pessimistic','Baseline','Optimistic'],
+    datasets: [{ label: '2027 EBITDA (€M)', data: [11.4, 17.5, 21.9], backgroundColor: [CORAL, TEAL, GREEN], borderRadius: 4, barPercentage: 0.5 }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero:true, title:{display:true,text:'€M'} } } }
+});
+</script>
+
+</body>
+</html>
